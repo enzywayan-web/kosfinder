@@ -1,30 +1,115 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:kosfinder/main.dart';
+import 'package:kosfinder/models/kos_model.dart';
+import 'package:kosfinder/repositories/kos_repository.dart';
+import 'package:kosfinder/widgets/kos_card.dart';
+
+class MockTestKosRepository extends KosRepository {
+  List<KosModel> mockData = [];
+  bool shouldThrow = false;
+  String errorMessage = 'Koneksi internet terputus';
+
+  @override
+  Future<List<KosModel>> getAllKos() async {
+    if (shouldThrow) {
+      throw KosRepositoryException(errorMessage);
+    }
+    return mockData;
+  }
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  const sampleKos = KosModel(
+    id: 'k1',
+    userId: 'u1',
+    name: 'Kos Sejahtera Indah',
+    address: 'Jl. Kampus Bawah No. 8',
+    cityOrArea: 'Singaraja',
+    monthlyPrice: 700000.0,
+    category: 'Putra',
+    status: 'Tersedia',
+    whatsappNumber: '081234567890',
+  );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  const sampleKosPenuh = KosModel(
+    id: 'k2',
+    userId: 'u2',
+    name: 'Kos Bunga Kenanga',
+    address: 'Jl. Ahmad Yani No. 15',
+    cityOrArea: 'Singaraja',
+    monthlyPrice: 900000.0,
+    category: 'Putri',
+    status: 'Penuh',
+    whatsappNumber: '081987654321',
+  );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  group('KosCard Widget Tests', () {
+    testWidgets('renders kos name, category, status Tersedia, and price correctly', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: KosCard(kos: sampleKos),
+          ),
+        ),
+      );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      expect(find.text('Kos Sejahtera Indah'), findsOneWidget);
+      expect(find.text('Kos Putra'), findsOneWidget);
+      expect(find.text('Tersedia'), findsOneWidget);
+      expect(find.text('Rp 700.000 / bulan'), findsOneWidget);
+      expect(find.text('Singaraja'), findsOneWidget);
+    });
+
+    testWidgets('renders status Penuh correctly with proper badge', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: KosCard(kos: sampleKosPenuh),
+          ),
+        ),
+      );
+
+      expect(find.text('Kos Bunga Kenanga'), findsOneWidget);
+      expect(find.text('Kos Putri'), findsOneWidget);
+      expect(find.text('Penuh'), findsOneWidget);
+      expect(find.text('Rp 900.000 / bulan'), findsOneWidget);
+    });
+  });
+
+  group('HomeScreen Integration Tests (US01-AC1, US01-AC2, US01-AC3)', () {
+    testWidgets('US01-AC1: displays list of kos cards when data is available', (tester) async {
+      final mockRepo = MockTestKosRepository()..mockData = [sampleKos, sampleKosPenuh];
+
+      await tester.pumpWidget(MyApp(kosRepository: mockRepo));
+      await tester.pumpAndSettle();
+
+      expect(find.text('KosFinder'), findsOneWidget);
+      expect(find.text('Kos Sejahtera Indah'), findsOneWidget);
+      expect(find.text('Kos Bunga Kenanga'), findsOneWidget);
+      expect(find.byType(KosCard), findsNWidgets(2));
+    });
+
+    testWidgets('US01-AC2: displays error state with Coba Lagi button on network failure', (tester) async {
+      final mockRepo = MockTestKosRepository()..shouldThrow = true;
+
+      await tester.pumpWidget(MyApp(kosRepository: mockRepo));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Koneksi Gagal'), findsOneWidget);
+      expect(find.text('Coba Lagi'), findsOneWidget);
+      expect(find.byType(KosCard), findsNothing);
+    });
+
+    testWidgets('US01-AC3: displays empty state when database has no records', (tester) async {
+      final mockRepo = MockTestKosRepository()..mockData = [];
+
+      await tester.pumpWidget(MyApp(kosRepository: mockRepo));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Belum ada kos yang terdaftar'), findsOneWidget);
+      expect(find.text('Muat Ulang'), findsOneWidget);
+      expect(find.byType(KosCard), findsNothing);
+    });
   });
 }
