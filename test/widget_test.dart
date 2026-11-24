@@ -150,4 +150,53 @@ void main() {
       expect(find.text('Hubungi via WhatsApp'), findsOneWidget);
     });
   });
+
+  group('Search Functionality Widget Tests (US02-AC1, US02-AC2)', () {
+    testWidgets('US02-AC1: filters kos list reactively when typing query', (tester) async {
+      final mockRepo = MockTestKosRepository()..mockData = [sampleKos, sampleKosPenuh];
+
+      await tester.pumpWidget(MyApp(kosRepository: mockRepo));
+      await tester.pumpAndSettle();
+
+      // Awalnya kedua kos tampil
+      expect(find.byType(KosCard), findsNWidgets(2));
+
+      // Masukkan kata kunci 'Sejahtera'
+      final searchField = find.byType(TextField);
+      expect(searchField, findsOneWidget);
+      await tester.enterText(searchField, 'Sejahtera');
+      await tester.pumpAndSettle();
+
+      // Hanya Kos Sejahtera Indah yang tampil
+      expect(find.text('Kos Sejahtera Indah'), findsOneWidget);
+      expect(find.text('Kos Bunga Kenanga'), findsNothing);
+      expect(find.byType(KosCard), findsOneWidget);
+    });
+
+    testWidgets('US02-AC2: displays empty search state and resets correctly', (tester) async {
+      final mockRepo = MockTestKosRepository()..mockData = [sampleKos, sampleKosPenuh];
+
+      await tester.pumpWidget(MyApp(kosRepository: mockRepo));
+      await tester.pumpAndSettle();
+
+      // Cari kos yang tidak ada
+      final searchField = find.byType(TextField);
+      await tester.enterText(searchField, 'KosTidakAdaXYZ');
+      await tester.pumpAndSettle();
+
+      // Verifikasi tampilan empty search state
+      expect(find.text('Kos tidak ditemukan'), findsOneWidget);
+      expect(find.text('Reset Pencarian'), findsOneWidget);
+      expect(find.byType(KosCard), findsNothing);
+
+      // Ketuk Reset Pencarian
+      await tester.tap(find.text('Reset Pencarian'));
+      await tester.pumpAndSettle();
+
+      // Verifikasi katalog kembali utuh
+      expect(find.byType(KosCard), findsNWidgets(2));
+      expect(find.text('Kos Sejahtera Indah'), findsOneWidget);
+      expect(find.text('Kos Bunga Kenanga'), findsOneWidget);
+    });
+  });
 }

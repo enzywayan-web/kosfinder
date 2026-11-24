@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/kos_provider.dart';
 import '../widgets/kos_card.dart';
+import '../widgets/search_bar_widget.dart';
 import 'kos_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -95,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          // Status Data Kosong (US01-AC3)
+          // Status Data Kosong di Database (US01-AC3)
           if (provider.isEmpty) {
             return Center(
               child: Padding(
@@ -130,27 +131,77 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          // Status Normal: Daftar Kos Tampil (US01-AC1)
-          return RefreshIndicator(
-            onRefresh: () => provider.refresh(),
-            child: ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 24),
-              itemCount: provider.kosList.length,
-              itemBuilder: (context, index) {
-                final kos = provider.kosList[index];
-                return KosCard(
-                  kos: kos,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => KosDetailScreen(kos: kos),
+          // Tampilan dengan Bilah Pencarian & Daftar Kos (US02-AC1 & US02-AC2)
+          return Column(
+            children: [
+              SearchBarWidget(
+                initialValue: provider.searchQuery,
+                onChanged: (query) => provider.setSearchQuery(query),
+                onClear: () => provider.clearSearch(),
+              ),
+
+              // Jika hasil pencarian nihil (US02-AC2)
+              if (provider.isSearchResultEmpty)
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off_outlined,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Kos tidak ditemukan',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tidak ada kos yang cocok dengan "${provider.searchQuery}". Silakan coba kata kunci lain.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () => provider.clearSearch(),
+                            icon: const Icon(Icons.clear),
+                            label: const Text('Reset Pencarian'),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ),
+                  ),
+                )
+              else
+                // Tampilan Daftar Kos Terfilter (US02-AC1)
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () => provider.refresh(),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(top: 4, bottom: 24),
+                      itemCount: provider.filteredKosList.length,
+                      itemBuilder: (context, index) {
+                        final kos = provider.filteredKosList[index];
+                        return KosCard(
+                          kos: kos,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => KosDetailScreen(kos: kos),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),
