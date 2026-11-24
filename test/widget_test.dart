@@ -91,6 +91,38 @@ void main() {
       expect(find.byType(KosCard), findsNWidgets(2));
     });
 
+    testWidgets('Tapping KosCard navigates to KosDetailScreen with corresponding data', (tester) async {
+      final mockRepo = MockTestKosRepository()..mockData = [sampleKos, sampleKosPenuh];
+
+      await tester.pumpWidget(MyApp(kosRepository: mockRepo));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(KosCard), findsNWidgets(2));
+
+      // Ketuk kartu kos pertama
+      await tester.tap(find.byType(KosCard).first);
+      await tester.pumpAndSettle();
+
+      // Pastikan halaman KosDetailScreen terbuka dengan data kos yang sesuai
+      expect(find.byType(KosDetailScreen), findsOneWidget);
+      expect(find.text('Kos Sejahtera Indah'), findsOneWidget);
+      expect(find.text('Jl. Kampus Bawah No. 8'), findsOneWidget);
+
+      // Kembali ke HomeScreen
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byType(KosDetailScreen), findsNothing);
+
+      // Ketuk kartu kos kedua pada judulnya
+      await tester.tap(find.text('Kos Bunga Kenanga'));
+      await tester.pumpAndSettle();
+
+      // Pastikan KosDetailScreen terbuka dengan data kos kedua
+      expect(find.byType(KosDetailScreen), findsOneWidget);
+      expect(find.text('Kos Bunga Kenanga'), findsOneWidget);
+      expect(find.text('Jl. Ahmad Yani No. 15'), findsOneWidget);
+    });
+
     testWidgets('US01-AC2: displays error state with Coba Lagi button on network failure', (tester) async {
       final mockRepo = MockTestKosRepository()..shouldThrow = true;
 

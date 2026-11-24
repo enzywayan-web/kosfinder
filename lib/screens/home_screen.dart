@@ -182,6 +182,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: RefreshIndicator(
                     onRefresh: () => provider.refresh(),
                     child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.only(top: 4, bottom: 24),
                       itemCount: provider.filteredKosList.length,
                       itemBuilder: (context, index) {
