@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/kos_provider.dart';
 import '../widgets/kos_card.dart';
+import 'kos_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -140,10 +141,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 return KosCard(
                   kos: kos,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Detail ${kos.name} akan aktif di T04'),
-                        duration: const Duration(seconds: 1),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => KosDetailScreen(kos: kos),
                       ),
                     );
                   },

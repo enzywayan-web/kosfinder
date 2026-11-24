@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kosfinder/main.dart';
 import 'package:kosfinder/models/kos_model.dart';
 import 'package:kosfinder/repositories/kos_repository.dart';
+import 'package:kosfinder/screens/kos_detail_screen.dart';
 import 'package:kosfinder/widgets/kos_card.dart';
 
 class MockTestKosRepository extends KosRepository {
@@ -110,6 +111,43 @@ void main() {
       expect(find.text('Belum ada kos yang terdaftar'), findsOneWidget);
       expect(find.text('Muat Ulang'), findsOneWidget);
       expect(find.byType(KosCard), findsNothing);
+    });
+  });
+
+  group('KosDetailScreen Widget Tests (US03-AC1)', () {
+    testWidgets('renders complete kos details and WhatsApp button', (tester) async {
+      const detailKos = KosModel(
+        id: 'k-detail',
+        userId: 'u-detail',
+        name: 'Kos Melati Cantik',
+        description: 'Kos bersih dan dekat minimarket',
+        address: 'Jl. Melati Putih No. 12',
+        cityOrArea: 'Singaraja Timur',
+        monthlyPrice: 650000.0,
+        yearlyPrice: 7000000.0,
+        category: 'Putri',
+        facilities: ['WiFi', 'AC', 'Kasur'],
+        status: 'Tersedia',
+        whatsappNumber: '081234567890',
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: KosDetailScreen(kos: detailKos),
+        ),
+      );
+
+      expect(find.text('Detail Kos'), findsOneWidget);
+      expect(find.text('Kos Melati Cantik'), findsOneWidget);
+      expect(find.text('Singaraja Timur'), findsOneWidget);
+      expect(find.text('Jl. Melati Putih No. 12'), findsOneWidget);
+      expect(find.text('Rp 650.000'), findsOneWidget);
+      expect(find.text('Rp 7.000.000'), findsOneWidget);
+      expect(find.text('Kos bersih dan dekat minimarket'), findsOneWidget);
+      expect(find.text('WiFi'), findsOneWidget);
+      expect(find.text('AC'), findsOneWidget);
+      expect(find.text('Kasur'), findsOneWidget);
+      expect(find.text('Hubungi via WhatsApp'), findsOneWidget);
     });
   });
 }
