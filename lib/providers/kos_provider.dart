@@ -1,3 +1,4 @@
+
 import 'package:flutter/foundation.dart';
 import '../models/kos_model.dart';
 import '../repositories/kos_repository.dart';
@@ -6,20 +7,25 @@ class KosProvider extends ChangeNotifier {
   final KosRepository _repository;
 
   List<KosModel> _kosList = [];
+  List<KosModel> _ownerKosList = [];
   bool _isLoading = false;
+  bool _isOwnerLoading = false;
   String? _errorMessage;
+  String? _ownerErrorMessage;
   String _searchQuery = '';
 
   KosProvider({KosRepository? repository})
       : _repository = repository ?? KosRepository();
 
   List<KosModel> get kosList => _kosList;
+  List<KosModel> get ownerKosList => _ownerKosList;
   bool get isLoading => _isLoading;
+  bool get isOwnerLoading => _isOwnerLoading;
   String? get errorMessage => _errorMessage;
+  String? get ownerErrorMessage => _ownerErrorMessage;
   bool get hasError => _errorMessage != null;
   bool get isEmpty => !_isLoading && _errorMessage == null && _kosList.isEmpty;
 
-  // Fitur Pencarian (Slice 2 - T05)
   String get searchQuery => _searchQuery;
   bool get isSearching => _searchQuery.trim().isNotEmpty;
 
@@ -37,7 +43,9 @@ class KosProvider extends ChangeNotifier {
     if (_searchQuery.trim().isEmpty) {
       return _kosList;
     }
+
     final query = _searchQuery.trim().toLowerCase();
+
     return _kosList.where((kos) {
       final nameMatch = kos.name.toLowerCase().contains(query);
       final cityMatch = kos.cityOrArea.toLowerCase().contains(query);
@@ -66,6 +74,24 @@ class KosProvider extends ChangeNotifier {
       _errorMessage = 'Terjadi kesalahan tidak terduga: $e';
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchOwnerKos(String userId) async {
+    _isOwnerLoading = true;
+    _ownerErrorMessage = null;
+    notifyListeners();
+
+    try {
+      _ownerKosList = await _repository.getKosByOwnerId(userId);
+      _ownerErrorMessage = null;
+    } on KosRepositoryException catch (e) {
+      _ownerErrorMessage = e.message;
+    } catch (e) {
+      _ownerErrorMessage = 'Terjadi kesalahan tidak terduga: $e';
+    } finally {
+      _isOwnerLoading = false;
       notifyListeners();
     }
   }

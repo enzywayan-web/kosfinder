@@ -1,3 +1,4 @@
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/kos_model.dart';
 
@@ -30,7 +31,30 @@ class KosRepository {
           .map((item) => KosModel.fromJson(item as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw KosRepositoryException('Gagal memuat katalog kos: $e', originalError: e);
+      throw KosRepositoryException(
+        'Gagal memuat katalog kos: $e',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<List<KosModel>> getKosByOwnerId(String userId) async {
+    try {
+      final response = await _supabase
+          .from('kos')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      final List<dynamic> data = response as List<dynamic>;
+      return data
+          .map((item) => KosModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw KosRepositoryException(
+        'Gagal memuat daftar kos milik Anda: $e',
+        originalError: e,
+      );
     }
   }
 }
