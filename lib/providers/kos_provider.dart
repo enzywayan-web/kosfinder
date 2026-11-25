@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import '../models/kos_model.dart';
 import '../repositories/kos_repository.dart';
@@ -13,11 +12,13 @@ class KosProvider extends ChangeNotifier {
   bool _isOwnerLoading = false;
   bool _isAddingKos = false;
   bool _isUpdatingKos = false;
+  bool _isDeletingKos = false;
 
   String? _errorMessage;
   String? _ownerErrorMessage;
   String? _addKosErrorMessage;
   String? _updateKosErrorMessage;
+  String? _deleteKosErrorMessage;
 
   String _searchQuery = '';
 
@@ -32,11 +33,13 @@ class KosProvider extends ChangeNotifier {
   bool get isOwnerLoading => _isOwnerLoading;
   bool get isAddingKos => _isAddingKos;
   bool get isUpdatingKos => _isUpdatingKos;
+  bool get isDeletingKos => _isDeletingKos;
 
   String? get errorMessage => _errorMessage;
   String? get ownerErrorMessage => _ownerErrorMessage;
   String? get addKosErrorMessage => _addKosErrorMessage;
   String? get updateKosErrorMessage => _updateKosErrorMessage;
+  String? get deleteKosErrorMessage => _deleteKosErrorMessage;
 
   bool get hasError => _errorMessage != null;
 
@@ -151,10 +154,7 @@ class KosProvider extends ChangeNotifier {
     try {
       await _repository.updateKos(kos);
 
-      // Refresh owner list
       _ownerKosList = await _repository.getKosByOwnerId(kos.userId);
-
-      // Refresh public catalog
       _kosList = await _repository.getAllKos();
 
       return true;
@@ -166,6 +166,31 @@ class KosProvider extends ChangeNotifier {
       return false;
     } finally {
       _isUpdatingKos = false;
+      notifyListeners();
+    }
+  }
+
+  // Delete kos
+  Future<bool> deleteKos(KosModel kos) async {
+    _isDeletingKos = true;
+    _deleteKosErrorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.deleteKos(kos.id, kos.userId);
+
+      _ownerKosList = await _repository.getKosByOwnerId(kos.userId);
+      _kosList = await _repository.getAllKos();
+
+      return true;
+    } on KosRepositoryException catch (e) {
+      _deleteKosErrorMessage = e.message;
+      return false;
+    } catch (e) {
+      _deleteKosErrorMessage = 'Terjadi kesalahan: $e';
+      return false;
+    } finally {
+      _isDeletingKos = false;
       notifyListeners();
     }
   }

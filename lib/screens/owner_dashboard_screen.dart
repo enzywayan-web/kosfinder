@@ -70,6 +70,50 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     }
   }
 
+  Future<void> _confirmDeleteKos(KosModel kos) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus Kos?'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus "${kos.name}"? '
+          'Data kos ini tidak dapat dikembalikan setelah dihapus.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    final success = await context.read<KosProvider>().deleteKos(kos);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Kos berhasil dihapus.'
+              : context.read<KosProvider>().deleteKosErrorMessage ??
+                  'Gagal menghapus kos.',
+        ),
+      ),
+    );
+  }
+
   Future<void> _logout() async {
     if (context.read<AuthProvider>().isLoading) return;
 
@@ -195,6 +239,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 (kos) => _OwnerKosCard(
                   kos: kos,
                   onEdit: () => _openEditKos(kos),
+                  onDelete: () => _confirmDeleteKos(kos),
+                  isDeleting: kosProvider.isDeletingKos,
                 ),
               ),
           ],
@@ -212,10 +258,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 class _OwnerKosCard extends StatelessWidget {
   final KosModel kos;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final bool isDeleting;
 
   const _OwnerKosCard({
     required this.kos,
     required this.onEdit,
+    required this.onDelete,
+    required this.isDeleting,
   });
 
   @override
@@ -247,10 +297,23 @@ class _OwnerKosCard extends StatelessWidget {
           ],
         ),
         isThreeLine: true,
-        trailing: IconButton(
-          tooltip: 'Edit Kos',
-          icon: const Icon(Icons.edit_outlined),
-          onPressed: onEdit,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Edit Kos',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: isDeleting ? null : onEdit,
+            ),
+            IconButton(
+              tooltip: 'Hapus Kos',
+              icon: const Icon(
+                Icons.delete_outline,
+                color: Colors.red,
+              ),
+              onPressed: isDeleting ? null : onDelete,
+            ),
+          ],
         ),
       ),
     );

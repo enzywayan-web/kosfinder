@@ -1,4 +1,3 @@
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/kos_model.dart';
 
@@ -81,6 +80,21 @@ class KosRepository {
     } catch (e) {
       throw KosRepositoryException(
         'Gagal memperbarui data kos: $e',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<void> deleteKos(String kosId, String userId) async {
+    try {
+      await _supabase
+          .from('kos')
+          .delete()
+          .eq('id', kosId)
+          .eq('user_id', userId);
+    } catch (e) {
+      throw KosRepositoryException(
+        'Gagal menghapus kos: $e',
         originalError: e,
       );
     }
