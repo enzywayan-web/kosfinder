@@ -27,6 +27,7 @@ class KosRepository {
           .order('created_at', ascending: false);
 
       final List<dynamic> data = response as List<dynamic>;
+
       return data
           .map((item) => KosModel.fromJson(item as Map<String, dynamic>))
           .toList();
@@ -47,12 +48,39 @@ class KosRepository {
           .order('created_at', ascending: false);
 
       final List<dynamic> data = response as List<dynamic>;
+
       return data
           .map((item) => KosModel.fromJson(item as Map<String, dynamic>))
           .toList();
     } catch (e) {
       throw KosRepositoryException(
         'Gagal memuat daftar kos milik Anda: $e',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<void> addKos(KosModel kos) async {
+    try {
+      await _supabase.from('kos').insert(kos.toJson());
+    } catch (e) {
+      throw KosRepositoryException(
+        'Gagal menambahkan kos: $e',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<void> updateKos(KosModel kos) async {
+    try {
+      await _supabase
+          .from('kos')
+          .update(kos.toJson())
+          .eq('id', kos.id)
+          .eq('user_id', kos.userId);
+    } catch (e) {
+      throw KosRepositoryException(
+        'Gagal memperbarui data kos: $e',
         originalError: e,
       );
     }
