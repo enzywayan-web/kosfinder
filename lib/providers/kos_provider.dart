@@ -21,6 +21,7 @@ class KosProvider extends ChangeNotifier {
   String? _deleteKosErrorMessage;
 
   String _searchQuery = '';
+  double? _maxMonthlyPrice;
 
   KosProvider({KosRepository? repository})
       : _repository = repository ?? KosRepository();
@@ -49,6 +50,9 @@ class KosProvider extends ChangeNotifier {
   String get searchQuery => _searchQuery;
   bool get isSearching => _searchQuery.trim().isNotEmpty;
 
+  double? get maxMonthlyPrice => _maxMonthlyPrice;
+  bool get isPriceFiltering => _maxMonthlyPrice != null;
+
   // Search
   void setSearchQuery(String query) {
     _searchQuery = query;
@@ -60,20 +64,52 @@ class KosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<KosModel> get filteredKosList {
-    if (_searchQuery.trim().isEmpty) {
-      return _kosList;
-    }
+  // Filter harga bulanan
+  void setMaxMonthlyPrice(double? price) {
+    _maxMonthlyPrice = price;
+    notifyListeners();
+  }
 
+  void resetFilters() {
+    _searchQuery = '';
+    _maxMonthlyPrice = null;
+    notifyListeners();
+  }
+
+  // Search + Filter harga + Urutkan harga termurah
+  List<KosModel> get filteredKosList {
     final query = _searchQuery.trim().toLowerCase();
 
-    return _kosList.where((kos) {
+    final filteredList = _kosList.where((kos) {
       final nameMatch = kos.name.toLowerCase().contains(query);
       final cityMatch = kos.cityOrArea.toLowerCase().contains(query);
       final addressMatch = kos.address.toLowerCase().contains(query);
 
-      return nameMatch || cityMatch || addressMatch;
+      final matchesSearch = query.isEmpty ||
+          nameMatch ||
+          cityMatch ||
+          addressMatch;
+
+      final price = kos.monthlyPrice;
+      final matchesPrice = _maxMonthlyPrice == null ||
+          (price != null && price <= _maxMonthlyPrice!);
+
+      return matchesSearch && matchesPrice;
     }).toList();
+
+    // Urutkan harga dari termurah ke termahal
+    filteredList.sort((a, b) {
+      final priceA = a.monthlyPrice;
+      final priceB = b.monthlyPrice;
+
+      if (priceA == null && priceB == null) return 0;
+      if (priceA == null) return 1;
+      if (priceB == null) return -1;
+
+      return priceA.compareTo(priceB);
+    });
+
+    return filteredList;
   }
 
   bool get isSearchResultEmpty =>

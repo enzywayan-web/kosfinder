@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +6,7 @@ import '../providers/kos_provider.dart';
 import '../models/kos_model.dart';
 import 'add_kos_screen.dart';
 import 'edit_kos_screen.dart';
+import 'kos_detail_screen.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
@@ -38,6 +38,15 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     if (userId != null) {
       await context.read<KosProvider>().fetchOwnerKos(userId);
     }
+  }
+
+  Future<void> _openDetailKos(KosModel kos) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => KosDetailScreen(kos: kos),
+      ),
+    );
   }
 
   Future<void> _openAddKos() async {
@@ -238,6 +247,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               ...kosProvider.ownerKosList.map(
                 (kos) => _OwnerKosCard(
                   kos: kos,
+                  onOpen: () => _openDetailKos(kos),
                   onEdit: () => _openEditKos(kos),
                   onDelete: () => _confirmDeleteKos(kos),
                   isDeleting: kosProvider.isDeletingKos,
@@ -257,12 +267,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
 class _OwnerKosCard extends StatelessWidget {
   final KosModel kos;
+  final VoidCallback onOpen;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final bool isDeleting;
 
   const _OwnerKosCard({
     required this.kos,
+    required this.onOpen,
     required this.onEdit,
     required this.onDelete,
     required this.isDeleting,
@@ -273,6 +285,7 @@ class _OwnerKosCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
+        onTap: onOpen,
         leading: const CircleAvatar(
           child: Icon(Icons.home_work_outlined),
         ),
@@ -294,6 +307,14 @@ class _OwnerKosCard extends StatelessWidget {
                   : 'Harga belum tersedia',
             ),
             Text('Status: ${kos.status}'),
+            const SizedBox(height: 4),
+            const Text(
+              'Ketuk untuk melihat detail',
+              style: TextStyle(
+                color: Colors.teal,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
         isThreeLine: true,

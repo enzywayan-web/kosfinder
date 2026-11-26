@@ -113,6 +113,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(KosDetailScreen), findsNothing);
 
+      // Pastikan kartu kos kedua terlihat sebelum diketuk
+      await tester.ensureVisible(find.text('Kos Bunga Kenanga'));
+      await tester.pumpAndSettle();
+
       // Ketuk kartu kos kedua pada judulnya
       await tester.tap(find.text('Kos Bunga Kenanga'));
       await tester.pumpAndSettle();
