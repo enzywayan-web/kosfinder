@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/kos_provider.dart';
 import '../widgets/kos_card.dart';
 import '../widgets/search_bar_widget.dart';
+import 'about_screen.dart';
 import 'kos_detail_screen.dart';
 import 'login_screen.dart';
 
@@ -32,6 +32,18 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'About KosFinder',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AboutScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
             tooltip: 'Login Pemilik Kos',
